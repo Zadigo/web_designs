@@ -312,13 +312,16 @@
             methods: {
                 async getTodos () {
                     try {
-                        const todos = localStorage.getItem('todos')
-                        if (!todos) {
+                        const hasTodos = this.$localstorage.exists('todos')
+                        // const todos = localStorage.getItem('todos')
+                        if (!hasTodos) {
                             const response = await this.$http.get('/todos')
                             this.todos = response.data
-                            localStorage.setItem('todos', JSON.stringify(this.todos))
+                            this.$localstorage.create('todos', this.todos)
+                            // localStorage.setItem('todos', JSON.stringify(this.todos))
                         } else {
-                            this.todos = JSON.parse(todos)
+                            // this.todos = JSON.parse(todos)
+                            this.todos = this.$localstorage.retrieve('todos')
                         }
                     } catch (e) {
                         console.log(e)
