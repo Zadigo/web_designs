@@ -58,12 +58,12 @@ class VueLocalStorage {
         this._save(storedData)
     }
 
-    exists (key) {
+    exists(key) {
         // NEW
         const storedData = this.data
         return Object.keys(storedData).includes(key)
     }
-    
+
     getDelete(key) {
         // NEW
         let returnValue
@@ -98,7 +98,7 @@ class VueLocalStorage {
         this.create(key, result)
     }
 
-    incrementBy(key, k=1) {
+    incrementBy(key, k = 1) {
         // NEW
         // var storedData = this.data
         // let result = this._getValueForOperation(key)
@@ -109,7 +109,7 @@ class VueLocalStorage {
         this.create(key, result)
     }
 
-    decrementBy(key, k=1) {
+    decrementBy(key, k = 1) {
         // NEW
         // var storedData = this.data
         // let result = this._getValueForOperation(key)
@@ -120,7 +120,7 @@ class VueLocalStorage {
         this.create(key, result)
     }
 
-    getOrCreate (key, value) {
+    getOrCreate(key, value) {
         // NEW
         // var storedData = this.data
         // let result = storedData[key]
@@ -169,7 +169,7 @@ class VueLocalStorage {
     //     })
     // }
 
-    listMerge (key, values) {
+    listMerge(key, values) {
         // NEW
         // let newList
         // var storedData = this.data
@@ -193,13 +193,13 @@ class VueLocalStorage {
         this.create(key, newList)
     }
 
-    listCount (key) {
+    listCount(key) {
         // NEW
         const result = this._getList(key)
         return result.length
     }
 
-    toggle (key) {
+    toggle(key) {
         // NEW
         // var storedData = this.data
         // let result = storedData[key]
@@ -225,7 +225,7 @@ class VueLocalStorage {
 
     //     var storedData = this.data
     //     storedData[key] = value
-        
+
     //     let expirations = storedData.exp || {}
     //     expirations[key] = base64Date
     //     storedData.exp = expirations
@@ -250,7 +250,7 @@ class VueLocalStorage {
                 localStorage: this.data
             })
         })
-        
+
         // setupDevtools(app, this)
         // // app.provide(storageSymbol, this)
         // app.config.globalProperties.$localstorage = this
