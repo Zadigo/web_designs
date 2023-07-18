@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Simple website</title>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+        <link rel="stylesheet" href="./vue_bootstrap.css">
+        <!-- <style>
+            #sidepanel {
+                position: sticky;
+                top: 0;
+                left: 0;
+            }
+        </style> -->
+        <style>
+            .general-enter-active,
+            .general-leave-active {
+                transition: all .3s ease-in-out;
+            }
+            
+            .general-move{
+                transition: all .25s ease-in-out;
+            }
+
+            .general-enter-from,
+            .general-leave-to {
+                opacity: 0;
+            }
+
+            .general-enter-to,
+            .general-leave-from {
+                opacity: 1;
+            }
+
+            .cards-transition-enter-active,
+            .cards-transition-leave-active {
+                transition: all .3s ease-in-out;
+            }
+            
+            .cards-transition-move{
+                transition: all .25s ease-in-out;
+            }
+
+            .cards-transition-enter-from,
+            .cards-transition-leave-to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            .cards-transition-enter-to,
+            .cards-transition-leave-from {
+                opacity: 1;
+                transform: scale(1);
+            }
+        </style>
+    </head>
+
+    <body>
+        <main>
+            <div id="app">
+                <section class="my-5">
+                    <div class="container">
+                        <div class="row">
+                            <cards />
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </body>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"></script>
+
+    <!-- Lodash -->
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+    
+    <!-- Vue -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <!-- Store -->
+    <script src="https://unpkg.com/vuex@4"></script>
+
+    <!-- Router -->
+    <script src="https://unpkg.com/vue-router@4"></script>
+
+    <!-- DayJS -->
+    <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
+
+    <!-- Localstorage -->
+    <script src="./vue_localstorage.js"></script>
+    <script src="./vue_session.js"></script>
+
+    <!-- Templates -->
+    <script id="todo-card" type="text/x-template">
+        <div class="col-12">
+            <div :class="{ 'shadow-none bg-light': todo.completed }" class="card shadow-sm">
+                <div class="card-body">
+                    <p class="card-text">[[ todo.title ]]</p>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="cards" type="text/x-template">
+        <div class="col-sm-12 col-md-8 offset-md-2">
+            <div class="row">
+                <div class="col-sm-12 col-md-6 order-sm-2">
+                    <div class="col-sm-12 col-md-6">
+                        <p>[[ searchedTodos.length ]] items</p>
+                    </div>
+
+                    <transition name="general">
+                        <div v-if="groupItems" class="row">
+                            <grouped-cards :items="groupedItems" />
+                        </div>
+
+                        <!-- <div v-else class="row"> -->
+                        <transition-group v-else name="cards-transition" tag="div" class="row" mode="out-in">
+                            <todo-card v-for="(todo, i) in searchedTodos" :key="todo.id" :class="{ 'mt-2': i >= 1 }" :todo="todo" />
+                        </transition-group>
+                        <!-- </div> -->
+                    </transition>
+                </div>
+
+                <div class="col-sm-12 col-md-6 order-sm-1 position-relative">
+                    <div ref="sidepanel" id="sidepanel" class="card shadow-sm">
+                        <div class="card-body">
+                            <base-input v-model="search" id="search" />
+                            <base-checkbox v-model="filterCompleted" id="choose" label="Completed" />
+                            <base-checkbox v-model="groupItems" id="group" label="Group" />
+                            <base-checkbox v-model="sortItems" id="sort" label="Sort by title" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="grouped-cards" type="text/x-template">
+        <div>
+            <div v-for="(title, t) in titles" :key="title">
+                <h3 :class="{ 'mt-4': t >= 1 }">[[ title ]]</h3>
+                <transition-group name="cards-transition" mode="out-in">
+                    <todo-card v-for="(todo, i) in items[title]" :key="todo.id" :todo="todo" :class="{ 'mt-2': i >= 1 }" />
+                </transition-group>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        axios.defaults.headers.common['Accept-Language'] = 'fr,en-US;q=0.9'
+        axios.defaults.headers.common['Content-Type'] = 'application/json'
+
+        const client = axios.create({
+            baseURL: 'https://jsonplaceholder.typicode.com/',
+            timeout: 5000,
+            withCredentials: true
+        })
+    </script>
+
+    <script>
+        const { createApp, ref, provide, inject } = Vue
+
+        const app = createApp({
+            name: 'App',
+            setup () {
+                const darkMode = ref(false)
+                provide('darkMode', darkMode)
+                return {
+                    darkMode
+                }
+            }
+        })
+    </script>
+
+    <script src="./vue_bootstrap.js"></script>
+ 
+    <script>
+        const TodoCard = {
+            name: 'TodoCard',
+            template: '#todo-card',
+            props: {
+                todo: {
+                    type: Object,
+                    required: true
+                }
+            },
+            emits: {
+                'update:state' () {
+                    return true
+                }
+            },
+            methods: {
+                toggleComplete () {
+                    this.todo.complete = !this.todo.complete
+                    this.$emit('update:state')
+                }
+            }
+        }
+        
+        const GroupedCards = {
+            name: 'GroupedCards',
+            template: '#grouped-cards',
+            components: {
+                TodoCard
+            },
+            props: {
+                items: {
+                    type: Object,
+                    required: true
+                }
+            },
+            computed: {
+                titles() {
+                    return Object.keys(this.items)
+                }
+            }
+        }
+        
+        const Cards = {
+            name: 'Cards',
+            template: '#cards',
+            components: {
+                TodoCard,
+                GroupedCards
+            },
+            data () {
+                return {
+                    todos: [],
+                    search: null,
+                    filterCompleted: false,
+                    groupItems: false,
+                    sortItems: false
+                }
+            },
+            computed: {
+                currentIds () {
+                    // Returns the IDs of the currently displayed items
+                    return _.map(this.searchedTodos, (todo) => {
+                        return todo.id
+                    })
+                },
+                searchedTodos() {
+                    // Returns items that corresponds to a search word
+                    // in the title or the "todos" list of elements
+                    if (this.search) {
+                        return _.filter(this.todosList, (todo) => {
+                            return _.some([
+                                todo.title.includes(this.search),
+                                todo.title.toLowerCase().includes(this.search)
+                            ])
+                        })
+                    } else {
+                        return this.todosList
+                    }
+                },
+                completedTodos () {
+                    // Returns todos marked as complete
+                    return _.filter(this.todosList, { completed: true })
+                },
+                notCompletedTodos () {
+                    // Returns todos marked as incomplete
+                    return _.filter(this.todosList, { completed: false })
+                },
+                todosList() {
+                    // Returns the todos list either
+                    // filtered and/or sorted
+                    let todos = this.todos
+
+                    if (this.filterCompleted) {
+                        todos = this.completedTodos
+                    }
+
+                    if (this.sortItems) {
+                        todos = this.doSortItems(todos)
+                    }
+
+                    return todos
+                },
+                groupedItems () {
+                    // Returns the todos list by group
+                    return {
+                        completed: _.filter(this.searchedTodos, { completed: true }),
+                        incompleted: _.filter(this.searchedTodos, { completed: false })
+                    }
+                }
+            },
+            created () {
+                this.getTodos()
+            },
+            // mounted() {
+            //     const self = this
+            //     window.addEventListener('scroll', () => {
+            //         if (document.documentElement.scrollTop > 0) {
+            //             self.$refs.sidepanel.classList.add('mt-5')
+            //         } else {
+            //             self.$refs.sidepanel.classList.remove('mt-5')
+            //         }
+            //     })
+            // },
+            methods: {
+                async getTodos () {
+                    try {
+                        const todos = localStorage.getItem('todos')
+                        if (!todos) {
+                            const response = await this.$http.get('/todos')
+                            this.todos = response.data
+                            localStorage.setItem('todos', JSON.stringify(this.todos))
+                        } else {
+                            this.todos = JSON.parse(todos)
+                        }
+                    } catch (e) {
+                        console.log(e)
+                    }
+                },
+                doSortItems (items) {
+                    // Sorts the list of items
+                    return _.sortBy(items, ['title'])
+                },
+            }
+        }
+    </script>
+
+    <script>
+        app.config.globalProperties.$http = client
+        app.config.compilerOptions.delimiters = [ '[[', ']]' ]
+        app.component('Cards', Cards)
+        app.use(createLocalStorage())
+        app.use(createVueSession())
+        app.mount('#app')
+    </script>
+</html>
