@@ -138,7 +138,7 @@
                         <div class="card-body">
                             <base-input v-model="search" id="search" />
                             <base-checkbox v-model="filterCompleted" id="choose" label="Completed" />
-                            <base-checkbox v-model="groupItems" id="group" label="Group" />
+                            <base-checkbox v-model="groupItems" id="group" label="Group" @click="doHistory('group')" />
                             <base-checkbox v-model="sortItems" id="sort" label="Sort by title" />
                         </div>
                     </div>
@@ -299,6 +299,9 @@
             created () {
                 this.getTodos()
             },
+            beforeMount () {
+                this.groupItems = this.$localstorage.retrieve('group') || false
+            },
             // mounted() {
             //     const self = this
             //     window.addEventListener('scroll', () => {
@@ -331,6 +334,9 @@
                     // Sorts the list of items
                     return _.sortBy(items, ['title'])
                 },
+                doHistory (name) {
+                    this.$localstorage.toggle(name)
+                }
             }
         }
     </script>
