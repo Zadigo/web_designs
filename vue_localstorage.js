@@ -157,6 +157,17 @@ class VueLocalStorage {
         this.create(key, result)
     }
 
+    defaultList (key, value) {
+        // NEW: Like listPush but creates
+        // a new list under the given
+        // key if it does not exist
+        if (this.exists(key)) {
+            this.listPush(key, value)
+        } else {
+            this.create(key, [value])
+        }
+    }
+
     // listFilter(key, value) {
     //     // NEW
     //     const result = this._getList(key)
