@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Example</title>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+        <link rel="stylesheet" href="./vue_bootstrap.css">
+        <!-- <style>
+                #sidepanel {
+                    position: sticky;
+                    top: 0;
+                    left: 0;
+                }
+            </style> -->
+        <style>
+            .general-enter-active,
+            .general-leave-active {
+                transition: all .3s ease-in-out;
+            }
+
+            .general-move {
+                transition: all .25s ease-in-out;
+            }
+
+            .general-enter-from,
+            .general-leave-to {
+                opacity: 0;
+            }
+
+            .general-enter-to,
+            .general-leave-from {
+                opacity: 1;
+            }
+
+            .cards-transition-enter-active,
+            .cards-transition-leave-active {
+                transition: all .3s ease-in-out;
+            }
+
+            .cards-transition-move {
+                transition: all .25s ease-in-out;
+            }
+
+            .cards-transition-enter-from,
+            .cards-transition-leave-to {
+                opacity: 0;
+                /* transform: scale(0.98); */
+            }
+
+            .cards-transition-enter-to,
+            .cards-transition-leave-from {
+                opacity: 1;
+                /* transform: scale(1); */
+            }
+
+            .edit-action {
+                cursor: pointer;
+            }
+        </style>
+    </head>
+
+    <body>
+        <main>
+            <div id="app">
+                <section class="my-5">
+                    <div class="container">
+                        <div class="row">
+                            <robot-interface />
+
+                            <!-- <div class="col-sm-12 col-md-3">
+                                <div class="card shadow-sm">
+                                    <div class="card-body">
+                                        <nav class="nav nav-pills flex-column">
+                                            <a class="nav-link active" aria-current="page" href="#">Scroll</a>
+                                            <a class="nav-link" href="#">Navigation</a>
+                                            <a class="nav-link" href="#">If</a>
+                                            <a class="nav-link" href="#">For-Loop</a>
+                                        </nav>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12 col-md-7 mt-sm-3">
+                                <div class="card shadow-sm">
+                                    <div class="card-body">
+                                        <button class="btn btn-secondary text-lowercase fs-6 btn-block shadow-none p-3">http://example.com</button>
+                                        <input type="url" class="form-control p-2" placeholder="Url">
+                                    </div>
+                                </div>
+                            </div> -->
+
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </body>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"></script>
+
+    <!-- Lodash -->
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+
+    <!-- Vue -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <!-- Store -->
+    <script src="https://unpkg.com/vuex@4"></script>
+
+    <!-- Router -->
+    <script src="https://unpkg.com/vue-router@4"></script>
+
+    <!-- DayJS -->
+    <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
+
+    <!-- Localstorage -->
+    <script src="./vue_localstorage.js"></script>
+    <script src="./vue_session.js"></script>
+
+    <!-- Templates -->
+    <script id="robot-interface" type="text/x-template">
+        <div class="row">
+            <div class="col-sm-12 col-md-3">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <nav-pills :items="actions" is-pills @click:nav-pill="doPillSelection" />
+
+                        <hr class="my-4">
+
+                        <button type="button" class="btn btn-danger btn-rounded" @click="resetWorkflow">Reset</button>
+                    </div>
+                </div>
+            </div>
+    
+            <div v-if="hasWorkflows" class="col-sm-12 col-md-7">
+                <component v-for="(item, i) in workflow" :key="item.id" :is="item.component" :workflow="item" :position="i" @workflow:validate="validateWorkflow" @workflow:delete="deleteWorkflow" />
+
+                <div class="row mt-4">
+                    <div class="col-sm-12 col-md-12">
+                        <button :disabled="!hasWorkflows" type="button" class="btn btn-primary btn-rounded">Run workflows</button>
+                    </div>
+                </div>
+            </div>
+
+            <div v-else class="col-sm-12 col-md-7">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title">No workflows</h3>
+                        <p class="card-text">Lorem ipsum dolor sit, amet consectetur adipisicing elit. Aut totam cum optio dolor velit laboriosam consequatur doloribus quidem cumque consequuntur? Dolor suscipit architecto corrupti laborum aspernatur, ullam sed assumenda dolorem?</p>
+
+                        <button type="button" class="btn btn-primary btn-rounded mt-3" @click="createAction(actions[1])">Go to a website</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </script>
+
+    <script id="navigation-layout" type="text/x-template">
+        <div :class="{ 'mt-2': position >= 1 }" class="card shadow-sm">
+            <div class="card-body">
+                <div v-if="validated" class="edit-action d-block p-3 rounded-1 bg-light" @click="validated = false">
+                    <span class="fw-bold text-uppercase text-secondary me-3">Navigation</span><span>[[ action.url ]]</span>
+                </div>
+                <input v-else v-model="action.url" type="url" class="form-control p-2" placeholder="Url">
+            </div>
+
+            <div class="card-footer">
+                <button v-if="validated" class="btn btn-secondary btn-sm btn-rounded shadow-none me-2" @click="validated = false">Edit</button>
+                <button v-else class="btn btn-success btn-sm btn-rounded shadow-none me-2" @click="validateWorkflow">Validate</button>
+                <button class="btn btn-danger btn-sm btn-rounded shadow-none me-2" @click="$emit('workflow:delete', workflow.id)">Delete</button>
+            </div>
+        </div>
+    </script>
+
+    <script id="scroll-layout" type="text/x-template">
+        <div :class="{ 'mt-2': position >= 1 }" class="card shadow-sm">
+            <div class="card-body">
+                <div class="edit-action d-block p-3 rounded-1 bg-light">
+                    <span class="fw-bold text-uppercase text-secondary me-3">Scroll</span>
+                </div>
+            </div>
+
+            <div class="card-footer">
+                <button class="btn btn-danger btn-sm" @click="$emit('workflow:delete', workflow.id)">Delete</button>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        axios.defaults.headers.common['Accept-Language'] = 'fr,en-US;q=0.9'
+        axios.defaults.headers.common['Content-Type'] = 'application/json'
+
+        const client = axios.create({
+            baseURL: 'https://jsonplaceholder.typicode.com/',
+            timeout: 5000,
+            withCredentials: true
+        })
+    </script>
+
+    <script>
+        const { createApp, ref, provide, inject } = Vue
+
+        const app = createApp({
+            name: 'App',
+            setup() {
+                const darkMode = ref(false)
+                provide('darkMode', darkMode)
+                return {
+                    darkMode
+                }
+            }
+        })
+    </script>
+
+    <script src="./vue_bootstrap.js"></script>
+
+    <script>
+        function useWorkflow () {
+            const validated = ref(false)
+
+            return {
+                validated
+            }
+        }
+
+        const NavigationLayout = {
+            name: 'NavigationLayout',
+            props: {
+                position: {
+                    type: Number,
+                    default: 0
+                },
+                workflow: {
+                    type: Object,
+                    required: true
+                }
+            },
+            template: '#navigation-layout',
+            emits: {
+                'workflow:validate' () {
+                    return true
+                },
+                'workflow:delete' () {
+                    return true
+                }
+            },
+            setup () {
+                const { validated } = useWorkflow()
+                return {
+                    validated
+                }
+            },
+            data () {
+                return {
+                    action: {
+                        url: null
+                    }
+                }
+            },
+            beforeMount () {
+                const action = this.workflow.action
+                this.validated = action.url !== null
+                this.action = action
+            },
+            methods: {
+                validateWorkflow () {
+                    this.validated = true
+                    this.$emit('workflow:validate', this.workflow.id, this.action)
+                }
+            }
+        }
+
+        const ScrollLayout = {
+            name: 'ScrollLayout',
+            props: {
+                position: {
+                    type: Number,
+                    default: 0
+                },
+                workflow: {
+                    type: Object,
+                    required: true
+                }
+            },
+            template: '#scroll-layout',
+            emits: {
+                'workflow:delete'() {
+                    return true
+                }
+            },
+            setup() {
+                const { validated } = useWorkflow()
+                return {
+                    validated
+                }
+            },
+            data() {
+                return {
+                    action: {
+                        scroll: false
+                    }
+                }
+            },
+            methods: {
+                validateWorkflow() {
+                    this.validated = true
+                    this.$emit('workflow:validate', this.workflow.id, this.action)
+                }
+            }
+        }
+
+        const RobotInterface = {
+            name: 'RobotInterface',
+            template: '#robot-interface',
+            components: {
+                NavigationLayout,
+                ScrollLayout
+            },
+            data () {
+                return {
+                    workflow: [],
+                    actions: [
+                        {
+                            name: 'Scroll',
+                            component: 'scroll-layout'
+                        },
+                        {
+                            name: 'Navigation',
+                            component: 'navigation-layout'
+                        },
+                        {
+                            name: 'If',
+                            component: 'if-layout'
+                        },
+                        {
+                            name: 'For-Loop',
+                            component: 'for-loop-layout'
+                        }
+                    ]
+                }
+            },
+            computed: {
+                hasWorkflows () {
+                    return this.workflow.length > 0
+                }
+            },
+            created () {
+                this.workflow = this.$localstorage.retrieve('workflow') || []
+            },
+            methods: {
+                doPillSelection (item) {
+                    this.createAction(item[1])
+                },
+                createAction (action) {
+                    this.workflow.push({
+                        id: (Math.random() + 1).toString(36).substring(7),
+                        name: action.name,
+                        component: action.component,
+                        action: {}
+                    })
+                    // this.$localstorage.create('workflow', this.workflow)
+                },
+                validateWorkflow (id, action) {
+                    const item = _.find(this.workflow, { id: id })
+                    item.action = action
+                    this.$localstorage.create('workflow', this.workflow)
+                },
+                deleteWorkflow (id) {
+                    const workflowIndex = _.findIndex(this.workflow, { id: id })
+                    this.workflow.splice(workflowIndex, 1)
+                    this.$localstorage.create('workflow', this.workflow)
+                },
+                resetWorkflow () {
+                    this.workflow = []
+                    this.$localstorage.remove('workflow')
+                }
+            }
+        }
+    </script>
+
+    <script>
+        app.config.globalProperties.$http = client
+        app.config.compilerOptions.delimiters = ['[[', ']]']
+        app.component('RobotInterface', RobotInterface)
+        app.use(createLocalStorage())
+        app.use(createVueSession())
+        app.mount('#app')
+    </script>
+</html>
