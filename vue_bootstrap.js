@@ -129,5 +129,98 @@ const BaseInput = {
     }
 }
 
+const BasePagination = {
+    name: 'BasePagination',
+    props: {
+        pages: {
+            type: Number,
+            default: 1
+        },
+        circle: {
+            type: Boolean
+        },
+        centered: {
+            type: Boolean
+        },
+        syncCurrentPage: {
+            type: Number,
+            default: null
+        }
+    },
+    template: `
+    <nav :class="{'pagination-dark': darkMode}" aria-label="Page navigation example">
+        <ul :class="paginationClasses" class="pagination">
+        <li :class="[selected === 1 ? 'disabled' : null]" class="page-item">
+            <a class="page-link" href @click.prevent="substract">
+            Previous
+            </a>
+        </li>
+        
+        <li v-for="page in pages" :key="page" :class="[selected === page ? 'active' : null]" class="page-item">
+            <a class="page-link" href @click.prevent="selected = page, $emit('page-click', page)">
+                [[ page ]]
+            </a>
+        </li>
+
+        <li :class="[selected === pages ? 'disabled' : null]" class="page-item">
+            <a class="page-link" href @click.prevent="add">
+            Next
+            </a>
+        </li>
+        </ul>
+    </nav>
+    `,
+    emits: {
+        'page-click'() {
+            return true
+        }
+    },
+    setup() {
+        const darkMode = inject('darkMode', false)
+        return {
+            darkMode
+        }
+    },
+    data() {
+        return {
+            selected: 1
+        }
+    },
+    computed: {
+        paginationClasses() {
+            return [
+                // pagination-md 
+                this.circle ? 'pagination-circle' : null,
+                this.centered ? 'justify-content-center' : null,
+            ]
+        }
+    },
+    watch: {
+        syncCurrentPage() {
+            // FIXME: Allows multiple BasePagination components
+            // to sync together via a central parameter
+            // that references the current page
+            if (this.syncCurrentPage !== null) {
+                if (this.selected !== this.syncCurrentPage) {
+                    this.selected = this.syncCurrentPage
+                }
+            }
+        }
+    },
+    methods: {
+        add() {
+            const result = this.selected + 1 > this.pages ? 1 : this.selected + 1
+            this.selected = result
+            this.$emit('page-click', result)
+        },
+        substract() {
+            const result = this.selected - 1 <= 0 ? this.pages : this.selected - 1
+            this.selected = result
+            this.$emit('page-click', result)
+        }
+    }
+}
+
 app.component('BaseCheckbox', BaseCheckBox)
 app.component('BaseInput', BaseInput)
+app.component('BasePagination', BasePagination)

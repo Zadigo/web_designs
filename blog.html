@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="X-UA-Compatible" content="ie=edge">
-        <title>Simple website</title>
+        <title>Example</title>
 
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.css">
@@ -50,13 +50,13 @@
             .cards-transition-enter-from,
             .cards-transition-leave-to {
                 opacity: 0;
-                transform: scale(0.95);
+                /* transform: scale(0.98); */
             }
 
             .cards-transition-enter-to,
             .cards-transition-leave-from {
                 opacity: 1;
-                transform: scale(1);
+                /* transform: scale(1); */
             }
         </style>
     </head>
@@ -67,7 +67,7 @@
                 <section class="my-5">
                     <div class="container">
                         <div class="row">
-                            <cards />
+                            <todo-interface />
                         </div>
                     </div>
                 </section>
@@ -112,39 +112,54 @@
         </div>
     </script>
 
-    <script id="cards" type="text/x-template">
+    <script id="todo-interface" type="text/x-template">
         <div class="col-sm-12 col-md-8 offset-md-2">
             <div class="row">
-                <div class="col-sm-12 col-md-6 order-sm-2">
-                    <div class="col-sm-12 col-md-6">
-                        <p>[[ searchedTodos.length ]] items</p>
+                <div class="col-sm-12 col-md-7 order-sm-2">
+                    <div class="col-sm-12 col-md-12">
+                        <p class="text-left">[[ paginationRange[0] ]]-[[ paginationRange[1] ]] of [[ $localstorage.listCount('todos') ]] items</p>
                     </div>
 
-                    <transition name="general">
+                    <!-- <transition name="general"> -->
                         <div v-if="groupItems" class="row">
                             <grouped-cards :items="groupedItems" />
                         </div>
 
                         <!-- <div v-else class="row"> -->
-                        <transition-group v-else name="cards-transition" tag="div" class="row" mode="out-in">
+                        <transition-group v-else name="cards-transition" tag="div" class="row">
                             <todo-card v-for="(todo, i) in searchedTodos" :key="todo.id" :class="{ 'mt-2': i >= 1 }" :todo="todo" />
                         </transition-group>
                         <!-- </div> -->
-                    </transition>
+                    <!-- </transition> -->
+
+                    <!-- Pagination -->
+                    <div class="col-sm-12 col-md-12 mt-4">
+                        <keep-alive>
+                            <base-pagination :pages="20" :sync-current-page="currentPage" @page-click="doPagination" />
+                        </keep-alive>
+                    </div>
                 </div>
 
-                <div class="col-sm-12 col-md-6 order-sm-1 position-relative">
+                <!-- Sidepanel -->
+                <aside class="col-sm-12 col-md-4 order-sm-1 position-relative">
                     <div ref="sidepanel" id="sidepanel" class="card shadow-sm">
                         <div class="card-body">
-                            <base-input v-model="search" id="search" />
+                            <base-input v-model="search" id="search" class="p-2" placeholder="Search" />
+
+                            <hr class="my-3">
+                            
                             <base-checkbox v-model="filterCompleted" id="choose" label="Completed" />
                             <base-checkbox v-model="groupItems" id="group" label="Group" @click="doHistory('group')" />
                             <base-checkbox v-model="sortItems" id="sort" label="Sort by title" />
                         </div>
                     </div>
-                </div>
+                </aside>
             </div>
         </div>
+    </script>
+
+    <script id="cards" type="text/x-template">
+        
     </script>
 
     <script id="grouped-cards" type="text/x-template">
@@ -230,7 +245,12 @@
         
         const Cards = {
             name: 'Cards',
-            template: '#cards',
+            template: null
+        }
+
+        const TodoInterface = {
+            name: 'TodoInterface',
+            template: '#todo-interface',
             components: {
                 TodoCard,
                 GroupedCards
@@ -241,7 +261,14 @@
                     search: null,
                     filterCompleted: false,
                     groupItems: false,
-                    sortItems: false
+                    sortItems: false,
+                    currentPage: 1,
+                    paginationRange: []
+                }
+            },
+            watch: {
+                currentPage (n) {
+                    this.$localstorage.create('currentPage', n)
                 }
             },
             computed: {
@@ -297,6 +324,7 @@
                 }
             },
             created () {
+                this.currentPage = this.$localstorage.retrieve('currentPage') || 1
                 this.getTodos()
             },
             beforeMount () {
@@ -316,15 +344,15 @@
                 async getTodos () {
                     try {
                         const hasTodos = this.$localstorage.exists('todos')
-                        // const todos = localStorage.getItem('todos')
                         if (!hasTodos) {
                             const response = await this.$http.get('/todos')
                             this.todos = response.data
                             this.$localstorage.create('todos', this.todos)
-                            // localStorage.setItem('todos', JSON.stringify(this.todos))
                         } else {
-                            // this.todos = JSON.parse(todos)
-                            this.todos = this.$localstorage.retrieve('todos')
+                            // this.todos = this.$localstorage.retrieve('todos')
+                            const paginationResult = this.$localstorage.paginate('todos', this.currentPage)
+                            this.paginationRange = paginationResult.paginationRange
+                            this.todos = paginationResult.items
                         }
                     } catch (e) {
                         console.log(e)
@@ -336,6 +364,13 @@
                 },
                 doHistory (name) {
                     this.$localstorage.toggle(name)
+                },
+                doPagination (page) {
+                    this.currentPage = page
+                    this.search = null
+                    const paginationResult = this.$localstorage.paginate('todos', this.currentPage)
+                    this.paginationRange = paginationResult.paginationRange
+                    this.todos = paginationResult.items
                 }
             }
         }
@@ -344,7 +379,7 @@
     <script>
         app.config.globalProperties.$http = client
         app.config.compilerOptions.delimiters = [ '[[', ']]' ]
-        app.component('Cards', Cards)
+        app.component('TodoInterface', TodoInterface)
         app.use(createLocalStorage())
         app.use(createVueSession())
         app.mount('#app')

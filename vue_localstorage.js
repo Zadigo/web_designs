@@ -239,8 +239,28 @@ class VueLocalStorage {
         this._save(storedData)
     }
 
-    save(key, value) {
-        this.storage.setItem(key, value)
+    // save(key, value) {
+    //     this.storage.setItem(key, value)
+    // }
+
+    paginate (key, currentPage=1, listDisplay=10) {
+        // NEW: From a big list of items, only return
+        // a certain amount of elements
+        const items = this._getList(key)
+        const numberOfPages = items.length / listDisplay
+        const startIndex = (currentPage - 1) * listDisplay
+        const endIndex = currentPage * listDisplay
+        const paginatedItems = items.filter((_, index) => {
+            return index >= startIndex && index < endIndex
+        })
+        return {
+            currentPage: currentPage,
+            hasNext: currentPage + 1 <= numberOfPages,
+            hasPrevious: currentPage > 1,
+            numberOfPages: numberOfPages,
+            paginationRange: [startIndex, endIndex],
+            items: paginatedItems,
+        }
     }
 
     install(app) {
