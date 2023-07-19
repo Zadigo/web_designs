@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Simple website</title>
+
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mdb-ui-kit/6.4.0/mdb.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+        <link rel="stylesheet" href="./vue_bootstrap.css">
+        <!-- <style>
+                #sidepanel {
+                    position: sticky;
+                    top: 0;
+                    left: 0;
+                }
+            </style> -->
+        <style>
+            .general-enter-active,
+            .general-leave-active {
+                transition: all .3s ease-in-out;
+            }
+
+            .general-move {
+                transition: all .25s ease-in-out;
+            }
+
+            .general-enter-from,
+            .general-leave-to {
+                opacity: 0;
+            }
+
+            .general-enter-to,
+            .general-leave-from {
+                opacity: 1;
+            }
+
+            .cards-transition-enter-active,
+            .cards-transition-leave-active {
+                transition: all .3s ease-in-out;
+            }
+
+            .cards-transition-move {
+                transition: all .25s ease-in-out;
+            }
+
+            .cards-transition-enter-from,
+            .cards-transition-leave-to {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+
+            .cards-transition-enter-to,
+            .cards-transition-leave-from {
+                opacity: 1;
+                transform: scale(1);
+            }
+
+            article.card {
+                transition: all .3s ease-in-out;
+                cursor: pointer;
+            }
+
+            article.card:hover {
+                transform: translateY(-10px);
+            }
+        </style>
+    </head>
+
+    
+    <body>
+        <main>
+            <div id="app">
+                <section class="my-5">
+                    <div class="container">
+                        <interface />
+                    </div>
+                </section>
+            </div>
+        </main>
+    </body>
+
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.7/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.min.js"></script>
+
+    <!-- Lodash -->
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.21/lodash.min.js"></script>
+
+    <!-- Vue -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+
+    <!-- Axios -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <!-- Store -->
+    <script src="https://unpkg.com/vuex@4"></script>
+
+    <!-- Router -->
+    <script src="https://unpkg.com/vue-router@4"></script>
+
+    <!-- DayJS -->
+    <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
+
+    <!-- Localstorage -->
+    <script src="./vue_localstorage.js"></script>
+    <script src="./vue_session.js"></script>
+
+    <!-- Templates -->
+    <script id="json-placeholder" type="text/x-template">
+        <back-to-home @back-to-home="$emit('back-to-home')" />
+
+        <div class="col-12 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <button type="button" class="btn btn-primary" @click="getAll">All todos</button>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="search-address" type="text/x-template">
+        <back-to-home @back-to-home="$emit('back-to-home')" />
+
+        <div class="col-12 col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <base-input v-model="search.address" id="address" placeholder="Address" autocomplete="address-line1" />
+                    <base-input v-model="search.post_code" id="address" placeholder="Postal code" class="my-2" autocomplete="postal-code" />
+                    
+                    <button type="button" class="btn btn-primary mt-3" @click="doSearch">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col-sm-12 col-md-6">
+                <div class="row">
+                    <div v-for="feature in addresses.features" class="col-sm-12 col-md-3">
+                        <div class="card">
+                            <div class="card-body">
+                                [[ feature.properties.label ]]
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="search-schools" type="text/x-template">
+        <back-to-home @back-to-home="$emit('back-to-home')" />
+
+        <div class="col-12 col-md-8 offset-md-2">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <base-input v-model="search.school" id="school" placeholder="School name" autocomplete="off" />
+                    
+                    <button type="button" class="btn btn-primary mt-3" @click="doSearch">
+                        Search
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-12 col-md-8 offset-md-2 mt-4">
+            <div class="row">
+                <div v-for="(school, i) in schools.records" :key="school.fields.id" class="col-sm-12 col-md-3">
+                    <article :aria-label="school.fields.academie" class="card my-2 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">[[ school.fields.implantation ]]</h5>
+                            <p class="card-text">
+                                <div>[[ school.fields.code_etablissement ]]</div>
+                                <a :href="school.fields.site_internet" target="_blank">Site internet</a>
+                            </p>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </script>
+
+    <script id="interface" type="text/x-template">
+        <div v-if="hasSelectedApi" class="row">
+            <component :is="selectedApi.component" :api-details="selectedApi" @back-to-home="doBackToHome" />
+        </div>
+        <div v-else class="row">
+            <div v-for="api in apis" :key="api.name" class="col-sm-12 col-md-4">
+                <article class="card shadow-sm" @click="selectApi(api)">
+                    <div class="card-body">
+                        <h4 class="card-title">[[ api.name ]]</h4>
+                        <p class="card-text">[[ api.description ]]</p>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </script>
+
+    <script>
+        axios.defaults.headers.common['Accept-Language'] = 'fr,en-US;q=0.9'
+        axios.defaults.headers.common['Content-Type'] = 'application/json'
+        axios.defaults.headers.common['Authorization'] = 'Bearer google'
+
+        // const client = axios.create({
+        //     baseURL: 'https://jsonplaceholder.typicode.com/',
+        //     timeout: 5000,
+        //     withCredentials: true
+        // })
+    </script>
+
+    <script>
+        const { createApp, ref, provide, inject, onMounted } = Vue
+
+        const app = createApp({
+            name: 'App',
+            setup () {
+                const darkMode = ref(false)
+                provide('darkMode', darkMode)
+                return {
+                    darkMode
+                }
+            }
+        })
+    </script>
+
+    <script src="./vue_bootstrap.js"></script>
+
+    <script>
+        const BackToHome = {
+            name: 'BackToHome',
+            template: `
+            <div class="row">
+                <div class="col-12">
+                    <button type="button" @click="doAction">Back</button>
+                </div>
+            </div>
+            `,
+            emits: {
+                'back-to-home'() {
+                    return true
+                }
+            },
+            methods: {
+                doAction () {
+                    this.$emit('back-to-home')
+                }
+            }
+        }
+
+        function useApi () {
+            const apiClient = null
+
+            function buildApi (details) {
+                this.apiClient = axios.create({
+                    baseURL: details.url,
+                    timeout: 5000,
+                    withCredentials: true
+                })
+            }
+
+            return {
+                buildApi,
+                apiClient
+            }
+        }
+
+        const SearchAddress = {
+            name: 'SearchAddress',
+            template: '#search-address',
+            props: {
+                apiDetails: {
+                    type: Object,
+                    required: true
+                }
+            },
+            components: {
+                BackToHome
+            },
+            emits: {
+                'back-to-home' () {
+                    return true
+                }
+            },
+            setup () {
+                const { buildApi, apiClient } = useApi()
+                return {
+                    apiClient,
+                    buildApi
+                }
+            },
+            data () {
+                return {
+                    search: {
+                        address: null,
+                        post_code: null
+                    },
+                    addresses: []
+                }
+            },
+            created () {
+                this.buildApi(this.apiDetails)
+            },
+            methods: {
+                async doSearch () {
+                    try {
+                        const data = new FormData()
+                        data.set('address', this.search.address)
+                        data.set('post_code', this.search.post_code)
+
+                        const response = await this.apiClient.post('/search-address', data)
+                        this.addresses = response.data
+                        this.$localstorage.create(this.apiDetails.name, this.addresses)
+
+                        this.$localstorage.defaultList('previousSearches', this.search)
+                        this.search = { address: null, post_code: null }
+                    } catch (e) {
+                        console.error(e)
+                    }
+                }
+            }
+        }
+
+        const JsonPlaceholder = {
+            name: 'JsonPlaceholder',
+            template: '#json-placeholder',
+            props: {
+                apiDetails: {
+                    type: Object,
+                    required: true
+                }
+            },
+            components: {
+                BackToHome
+            },
+            emits: {
+                'back-to-home'() {
+                    return true
+                }
+            },
+            setup () {
+                const { buildApi, apiClient } = useApi()
+                return {
+                    apiClient,
+                    buildApi
+                }
+            },
+            data () {
+                return {
+                    todos: []
+                }
+            },
+            created () {
+                this.buildApi(this.apiDetails)
+            },
+            methods: {
+                async getAll () {
+                    try {
+                        const response = await this.apiClient.get('/todos')
+                        this.todos = response.data
+                    } catch (e) {
+                        console.error(e)
+                    }
+                }
+            }
+        }
+
+        const SearchSchools = {
+                name: 'SearchSchools',
+                template: '#search-schools',
+                props: {
+                    apiDetails: {
+                        type: Object,
+                        required: true
+                    }
+                },
+                components: {
+                    BackToHome
+                },
+                emits: {
+                    'back-to-home' () {
+                        return true
+                    }
+                },
+                setup () {
+                    const { buildApi, apiClient } = useApi()
+                    return {
+                        apiClient,
+                        buildApi
+                    }
+                },
+                data () {
+                    return {
+                        search: {
+                            school: null,
+                        },
+                        schools: []
+                    }
+                },
+                created () {
+                    this.buildApi(this.apiDetails)
+                },
+                methods: {
+                    async doSearch () {
+                        try {
+                            const response = await this.apiClient.get('/schools', { params: this.search })
+                            this.schools = response.data
+                            this.$localstorage.create(this.apiDetails.name, this.schools)
+
+                            this.$localstorage.defaultList('previousSearches', this.search)
+                            this.search = { school: null }
+                        } catch (e) {
+                            console.error(e)
+                        }
+                    }
+                }
+            }
+
+        const Interface = {
+            name: 'Interface',
+            template: '#interface',
+            components: {
+                JsonPlaceholder,
+                SearchAddress,
+                SearchSchools
+            },
+            data () {
+                return {
+                    apis: [
+                        { 
+                            name: 'JSON Placeholder', 
+                            url: 'https://jsonplaceholder.typicode.com',
+                            component: 'json-placeholder',
+                            description: 'An API for testing purposes' 
+                        },
+                        {
+                            name: 'Search Address',
+                            url: 'http://127.0.0.1:5000/api/v1/',
+                            component: 'search-address',
+                            description: 'Search a given address in France'
+                        },
+                        {
+                            name: 'Search Schools',
+                            url: 'http://127.0.0.1:5000/api/v1/',
+                            component: 'search-schools',
+                            description: 'Search schools in France'
+                        }
+                    ],
+                    selectedApi: {},
+                }
+            },
+            computed: {
+                hasSelectedApi () {
+                    return Object.keys(this.selectedApi).length > 0
+                }
+            },
+            beforeMount () {
+                if (this.$localstorage.exists('currentApi')) {
+                    this.selectedApi = this.$localstorage.retrieve('currentApi')
+                }
+            },
+            methods: {
+                selectApi (api) {
+                    this.selectedApi = api
+                    this.$localstorage.create('currentApi', api)
+                },
+                doBackToHome () {
+                    this.selectedApi = {}
+                }
+            }
+        }
+    </script>
+
+    <script>
+        const { createRouter, createWebHistory } = VueRouter
+        const router = createRouter({
+            history: createWebHistory(),
+            routes: [
+                {
+                    path: '/',
+                    name: 'home',
+                    component: JsonPlaceholder
+                }
+            ]
+        })
+    </script>
+
+    <script>
+        // app.config.globalProperties.$http = client
+        app.config.compilerOptions.delimiters = ['[[', ']]']
+
+        app.use(createLocalStorage())
+        app.use(createVueSession())
+        app.use(router)
+        
+        app.component('Interface', Interface)
+
+        app.mount('#app')
+    </script>
+
+</html>
