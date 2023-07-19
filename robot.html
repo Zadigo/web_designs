@@ -148,7 +148,9 @@
 
                 <div class="row mt-4">
                     <div class="col-sm-12 col-md-12">
-                        <button :disabled="!hasWorkflows" type="button" class="btn btn-primary btn-rounded">Run workflows</button>
+                        <button :disabled="!hasWorkflows" type="button" class="btn btn-primary btn-rounded" @click="doRunWorkflows">
+                            Run workflows
+                        </button>
                     </div>
                 </div>
             </div>
@@ -210,7 +212,7 @@
     </script>
 
     <script>
-        const { createApp, ref, provide, inject } = Vue
+        const { createApp, ref, provide, inject, watchEffect } = Vue
 
         const app = createApp({
             name: 'App',
@@ -225,6 +227,7 @@
     </script>
 
     <script src="./vue_bootstrap.js"></script>
+    <script src="./vue_composables.js"></script>
 
     <script>
         function useWorkflow () {
@@ -328,6 +331,14 @@
                 NavigationLayout,
                 ScrollLayout
             },
+            setup () {
+                const { socket, createWebsocket, send } = useSocket()
+                return {
+                    socket,
+                    send,
+                    createWebsocket
+                }
+            },
             data () {
                 return {
                     workflow: [],
@@ -359,6 +370,16 @@
             created () {
                 this.workflow = this.$localstorage.retrieve('workflow') || []
             },
+            mounted () {
+                this.createWebsocket('ws/scraper', {
+                    onopen: (e) => {
+                        console.log(e)
+                    },
+                    onmessage: (e) => {
+                        console.log(e)
+                    }
+                })
+            },
             methods: {
                 doPillSelection (item) {
                     this.createAction(item[1])
@@ -385,6 +406,9 @@
                 resetWorkflow () {
                     this.workflow = []
                     this.$localstorage.remove('workflow')
+                },
+                doRunWorkflows () {
+                    this.socket.send(this.send('schedule', this.workflow))
                 }
             }
         }
